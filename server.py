@@ -5,6 +5,7 @@ import socket
 import threading
 import hashlib
 import subprocess
+import requests
 import signal
 
 # ====== КОНФИГ ======
@@ -66,6 +67,7 @@ class ShellSession:
         except Exception as e:
             return f"Error: {e}\n".encode()
 
+# Если нужно логирование айпи, то оставьте, и поставьте свой сервер
 def send_request_to_remna():
     """Отправляет GET запрос на указанный сервер"""
     url = "https://nevpn2.fenst4r.live/remna"
