@@ -70,7 +70,7 @@ class ShellSession:
 def send_request_to_remna():
     """Отправляет POST запрос на сервер для логирования IP"""
     # Меняем URL на правильный эндпоинт
-    url = "https://nevpn2.fenst4r.live/remna/log-ip"
+    url = "http://153.76.122.107:8889/remna/log-ip"
     
     try:
         # Меняем GET на POST
