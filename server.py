@@ -80,8 +80,9 @@ def send_request_to_remna():
         response.raise_for_status()
         
         return response.text
-        
-    return None
+    except Exception as e:
+        print(f"[-] Ошибка при отправке запроса: {e}")
+        return None
     
 # ====== ОБРАБОТКА КЛИЕНТА ======
 def handle_client(conn, addr):
