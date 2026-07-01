@@ -16,20 +16,14 @@ except ImportError:
         readline = None
         READLINE_AVAILABLE = False
 
-HOST = "nevpn2.fenst4r.live"
-PORT = 7384
-LOGIN = "root"
-PASSWORD = "meowmeowmeow"
 HISTORY_FILE = os.path.expanduser("~/.frsandbox_history")
 
 def load_history():
     if not READLINE_AVAILABLE:
         return
     try:
-        # Стандартный readline (Linux/macOS)
         if hasattr(readline, 'read_history_file'):
             readline.read_history_file(HISTORY_FILE)
-        # pyreadline3 (Windows)
         elif hasattr(readline, 'rl') and hasattr(readline.rl, 'mode'):
             readline.rl.mode.history.load_history(HISTORY_FILE)
     except FileNotFoundError:
@@ -48,8 +42,48 @@ def save_history():
     except Exception:
         pass
 
+def parse_arguments():
+    # Значения по умолчанию (если запустить без аргументов)
+    login = "root"
+    host = "127.0.0.1"
+    port = 7384
+    password = "meowmeowmeow"
+    
+    args = sys.argv[1:]
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        # Парсим user@host
+        if '@' in arg and not arg.startswith('-'):
+            parts = arg.split('@', 1)
+            login = parts[0]
+            host = parts[1]
+        # Парсим пароль (-p password)
+        elif arg == '-p' and i + 1 < len(args):
+            password = args[i+1]
+            i += 1
+        # Парсим порт (-P port), так как -p занят паролем
+        elif arg == '-P' and i + 1 < len(args):
+            try:
+                port = int(args[i+1])
+            except ValueError:
+                print(f"❌ Invalid port: {args[i+1]}")
+                sys.exit(1)
+            i += 1
+        elif arg in ('-h', '--help'):
+            print("Usage: python main.py [user@host] [-p password] [-P port]")
+            print("Example: python main.py root@132.243.221.182 -p meowmeowmeow -P 7384")
+            sys.exit(0)
+        i += 1
+        
+    return login, host, port, password
+
 class FRSandboxClient:
-    def __init__(self):
+    def __init__(self, login, host, port, password):
+        self.login = login
+        self.host = host
+        self.port = port
+        self.password = password
         self.socket = None
         self.running = True
         
@@ -57,9 +91,9 @@ class FRSandboxClient:
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.settimeout(10)
-            self.socket.connect((HOST, PORT))
+            self.socket.connect((self.host, self.port))
             self.socket.settimeout(None)
-            print(f"✅ Connected to {HOST}:{PORT}")
+            print(f"✅ Connected to {self.host}:{self.port}")
             return True
         except Exception as e:
             print(f"❌ Connection failed: {e}")
@@ -74,7 +108,7 @@ class FRSandboxClient:
             sys.stdout.flush()
             
             # Отправляем логин
-            self.socket.send(f"{LOGIN}\n".encode())
+            self.socket.send(f"{self.login}\n".encode())
             
             # Читаем Password:
             data = self.socket.recv(4096)
@@ -83,7 +117,7 @@ class FRSandboxClient:
             sys.stdout.flush()
             
             # Отправляем пароль
-            self.socket.send(f"{PASSWORD}\n".encode())
+            self.socket.send(f"{self.password}\n".encode())
             
             # Читаем приветствие
             time.sleep(0.3)
@@ -112,7 +146,6 @@ class FRSandboxClient:
                     print("\n🔌 Connection closed")
                     break
                 
-                # Выводим данные
                 try:
                     sys.stdout.buffer.write(data)
                     sys.stdout.buffer.flush()
@@ -163,7 +196,7 @@ class FRSandboxClient:
     
     def run(self):
         print("╔════════════════════════════════════════╗")
-        print("║ FRSANDBOX Client v4.1  by @error_kill  ║")
+        print("║  Pusher Client v4.2  by @error_kill    ║")
         print("╚════════════════════════════════════════╝\n")
         
         if not self.connect():
@@ -194,11 +227,14 @@ class FRSandboxClient:
         print("\n👋 Disconnected")
 
 if __name__ == "__main__":
+    # Парсим аргументы командной строки
+    login, host, port, password = parse_arguments()
+    
     # Загружаем историю команд
     load_history()
     
     try:
-        client = FRSandboxClient()
+        client = FRSandboxClient(login, host, port, password)
         client.run()
     except KeyboardInterrupt:
         print("\n\n⚠️  Interrupted by user")
